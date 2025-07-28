@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactMarkdown from 'react-markdown';
 import './ChatSection.css';
 
 function ChatSection({ messages }) {
@@ -15,9 +16,7 @@ function ChatSection({ messages }) {
               <div className="response-header"></div>
             )}
             <div className="message-content">
-              {msg.text.split('\n').map((paragraph, i) => (
-                <p key={i}>{paragraph}</p>
-              ))}
+              <ReactMarkdown>{msg.text}</ReactMarkdown>
             </div>
             {msg.sender === 'bot' && msg.sources && (
               <div className="sources">
