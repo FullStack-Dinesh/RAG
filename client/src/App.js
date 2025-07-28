@@ -37,7 +37,7 @@ function App() {
 
     try {
       setLoading({ ...loading, upload: true });
-      const res = await axios.post('http://localhost:8000/upload', formData, {
+      const res = await axios.post('https://rag-be.vercel.app/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setUploadMessage(res.data.message);
@@ -59,7 +59,7 @@ function App() {
 
     try {
       setLoading({ ...loading, ask: true });
-      const res = await axios.post('http://localhost:8000/query', {
+      const res = await axios.post('https://rag-be.vercel.app/query', {
         question: query,
         session_id: sessionId
       }, {
@@ -82,7 +82,7 @@ function App() {
   const confirmReset = async () => {
     try {
       if (sessionId) {
-        await axios.post('http://localhost:8000/reset', { session_id: sessionId }, {
+        await axios.post('https://rag-be.vercel.app/reset', { session_id: sessionId }, {
           headers: { 'Content-Type': 'application/json' }
         });
       }
