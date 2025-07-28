@@ -61,9 +61,14 @@ except Exception as e:
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
+    allow_origins=[
+        "https://fullstack-dinesh.github.io",  # Your GitHub Pages frontend
+        "http://localhost:3000",                # For local development
+    ],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
+    allow_credentials=True,
+    max_age=600,
 )
 
 class QueryRequest(BaseModel):
