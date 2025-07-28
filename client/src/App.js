@@ -7,7 +7,7 @@ import ChatSection from './components/ChatSection';
 import ConfirmationDialog from './components/ConfirmationDialog';
 
 function App() {
-  const [file, setFile] = useState(null);
+  const [file, setFile] = useState([]);
   const [uploadMessage, setUploadMessage] = useState('');
   const [query, setQuery] = useState('');
   const [answer, setAnswer] = useState('');
@@ -18,38 +18,38 @@ function App() {
   const [uploadedFileName, setUploadedFileName] = useState('');
 
   const handleFileChange = (e) => {
-  const selectedFile = e.target.files[0];
-  console.log('Selected file:', selectedFile);
-  setFile(selectedFile);
+  const selectedFiles = Array.from(e.target.files);
+  console.log('Selected files:', selectedFiles);
+  setFile(selectedFiles);
   setUploadMessage('');
   setAnswer('');
-  setUploadedFileName(selectedFile?.name || '');
+  setUploadedFileName(selectedFiles.map(f => f.name).join(', '));
 };
 
   const handleUpload = async () => {
-    if (!file) {
-      setUploadMessage('Please select a PDF file first');
-      return;
-    }
+  if (!file || file.length === 0) {
+    setUploadMessage('Please select at least one PDF file');
+    return;
+  }
 
-    const formData = new FormData();
-    formData.append('file', file);
+  const formData = new FormData();
+  file.forEach(f => formData.append('files', f));
 
-    try {
-      setLoading({ ...loading, upload: true });
-      const res = await axios.post('http://localhost:8000/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      setUploadMessage(res.data.message);
-      setSessionId(res.data.session_id);
-      setMessages([{ text: `Document "${file.name}" uploaded successfully`, sender: 'bot' }]);
-    } catch (error) {
-      console.error('Upload error:', error);
-      setUploadMessage(error.response?.data?.detail || 'Upload failed. Please try again.');
-    } finally {
-      setLoading({ ...loading, upload: false });
-    }
-  };
+  try {
+    setLoading({ ...loading, upload: true });
+    const res = await axios.post('http://localhost:8000/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    setUploadMessage(res.data.message);
+    setSessionId(res.data.session_id);
+    setMessages([{ text: `Uploaded: ${uploadedFileName}`, sender: 'bot' }]);
+  } catch (error) {
+    console.error('Upload error:', error);
+    setUploadMessage(error.response?.data?.detail || 'Upload failed. Please try again.');
+  } finally {
+    setLoading({ ...loading, upload: false });
+  }
+};
 
   const handleAsk = async () => {
     if (!query.trim()) {
