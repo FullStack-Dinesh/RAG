@@ -12,7 +12,7 @@ body {
   padding: 10px;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box; /* Include padding in height calculation */
+  box-sizing: border-box;
 }
 
 .app-header {
