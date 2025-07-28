@@ -37,7 +37,7 @@ function App() {
 
     try {
       setLoading({ ...loading, upload: true });
-      const res = await axios.post('https://rag-be.vercel.app/upload', formData, {
+      const res = await axios.post('http://localhost:8000/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setUploadMessage(res.data.message);
@@ -56,18 +56,25 @@ function App() {
       setAnswer('Please enter a question');
       return;
     }
-
+  
     try {
       setLoading({ ...loading, ask: true });
-      const res = await axios.post('https://rag-be.vercel.app/query', {
-        question: query,
-        session_id: sessionId
-      }, {
+  
+      const payload = { question: query };
+      if (sessionId) {
+        payload.session_id = sessionId;
+      }
+  
+      const res = await axios.post('http://localhost:8000/query', payload, {
         headers: { 'Content-Type': 'application/json' }
       });
-
+  
       setAnswer(res.data.answer);
-      setMessages(prev => [...prev, { text: query, sender: 'user' }, { text: res.data.answer, sender: 'bot' }]);
+      setMessages(prev => [
+        ...prev,
+        { text: query, sender: 'user' },
+        { text: res.data.answer, sender: 'bot' }
+      ]);
       setQuery('');
     } catch (error) {
       console.error('Query error:', error);
@@ -82,7 +89,7 @@ function App() {
   const confirmReset = async () => {
     try {
       if (sessionId) {
-        await axios.post('https://rag-be.vercel.app/reset', { session_id: sessionId }, {
+        await axios.post('http://localhost:8000/reset', { session_id: sessionId }, {
           headers: { 'Content-Type': 'application/json' }
         });
       }
@@ -107,7 +114,6 @@ function App() {
     <div className="app-container">
       <header className="app-header">
         <h1>Document AI Assistant</h1>
-        <p>Ask questions about your uploaded documents</p>
       </header>
 
       <UploadSection

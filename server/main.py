@@ -1,5 +1,5 @@
 import os
-from typing import List, Dict
+from typing import List, Dict, Optional
 import numpy as np
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,7 +10,6 @@ import uuid
 from dotenv import load_dotenv
 from pinecone import Pinecone, ServerlessSpec
 from pydantic import BaseModel
-import time
 
 load_dotenv()
 
@@ -20,7 +19,7 @@ class Config:
         self.AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
         self.PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
         self.validate_credentials()
-        
+
         self.AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "2023-05-15")
         self.AZURE_EMBEDDING_DEPLOYMENT = os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "text-embedding-3-small")
         self.AZURE_CHAT_DEPLOYMENT = os.getenv("AZURE_OPENAI_CHAT_DEPLOYMENT", "gpt-35-turbo")
@@ -61,11 +60,8 @@ except Exception as e:
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://fullstack-dinesh.github.io",  # Your GitHub Pages frontend
-        "http://localhost:3000",                # For local development
-    ],
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_origins=["http://localhost:3000"],
+    allow_methods=["*"],
     allow_headers=["*"],
     allow_credentials=True,
     max_age=600,
@@ -73,18 +69,18 @@ app.add_middleware(
 
 class QueryRequest(BaseModel):
     question: str
-    session_id: str = None
+    session_id: Optional[str] = None
 
 class UploadResponse(BaseModel):
     message: str
     session_id: str
 
 class QueryResponse(BaseModel):
-    answer: str  
+    answer: str
 
 def extract_text_from_pdf(file_path: str) -> str:
     reader = PdfReader(file_path)
-    return " ".join([page.extract_text() for page in reader.pages])
+    return " ".join([page.extract_text() for page in reader.pages if page.extract_text()])
 
 def chunk_text(text: str, chunk_size: int = 512) -> List[str]:
     tokenizer = tiktoken.get_encoding("cl100k_base")
@@ -101,15 +97,27 @@ def generate_embeddings(texts: List[str]) -> List[List[float]]:
 def upsert_documents(documents: List[Dict], namespace: str):
     pinecone_index.upsert(vectors=documents, namespace=namespace)
 
-def query_vector_store(vector: List[float], namespace: str = None, top_k: int = 3):
+def query_vector_store(vector: List[float], namespace: Optional[str] = None, top_k: int = 3):
     params = {"vector": vector, "top_k": top_k, "include_metadata": True}
     if namespace:
         params["namespace"] = namespace
     return pinecone_index.query(**params)
 
 RAG_PROMPT_TEMPLATE = """
-Answer the question based only on the following context:
-{context}
+You are an expert AI assistant tasked with answering questions based strictly on the provided context. 
+Please adhere to the following guidelines:
+
+1. Contextual Response:
+   - Base your answer exclusively on this context:
+
+   {context}
+
+2. Structured Responses 
+   - For factual or data-driven questions: 
+     - Give Suitable heading for the response
+     - Employ Roman numerals (I, II, III) for logical reasoning or calculations, indented by 2 spaces.  
+     - Use bullet points for sub-details, indented by 4 spaces only if needed.  
+   - Maintain a clear visual hierarchy with spacing and formal language.  
 
 Question: {question}
 """
@@ -136,21 +144,21 @@ async def upload_document(file: UploadFile = File(...)):
     
     session_id = str(uuid.uuid4())
     temp_path = f"temp_{session_id}.pdf"
-    
+
     try:
         with open(temp_path, "wb") as f:
             f.write(await file.read())
-        
+
         text = extract_text_from_pdf(temp_path)
         chunks = chunk_text(text)
         embeddings = generate_embeddings(chunks)
-        
+
         documents = [{
             "id": str(uuid.uuid4()),
             "values": embedding,
             "metadata": {"text": chunk, "filename": file.filename}
         } for chunk, embedding in zip(chunks, embeddings)]
-        
+
         upsert_documents(documents, session_id)
         return UploadResponse(
             message=f"Processed {len(chunks)} chunks",

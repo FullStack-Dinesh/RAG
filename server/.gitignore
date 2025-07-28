@@ -35,7 +35,6 @@ build/
 /client/out/
 
 # Backend (Python) specific
-/server/.env
 /server/venv/
 /server/env/
 /server/.mypy_cache/
