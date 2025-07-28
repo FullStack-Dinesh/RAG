@@ -39,10 +39,9 @@ jobs:
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
-          name: python-app
-          path: |
-            .
-            !venv/
+           name: python-app
+           path: |
+              server
 
   deploy:
     runs-on: ubuntu-latest
