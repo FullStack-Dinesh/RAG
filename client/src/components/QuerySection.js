@@ -4,7 +4,6 @@ import './QuerySection.css';
 function QuerySection({ query, onQueryChange, onAsk, onReset, loading }) {
   return (
     <div className="query-section">
-      <h2>2. Ask a Question</h2>
       <textarea
         placeholder="Type your question about the document..."
         value={query}
