@@ -47,6 +47,7 @@ if PINECONE_INDEX_NAME not in pc.list_indexes().names():
 pinecone_index = pc.Index(PINECONE_INDEX_NAME)
 
 app = FastAPI()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -114,21 +115,14 @@ Please follow these rules:
    - Roman numerals for main ideas
    - Bulleted subpoints (if needed)
 
----
-
 Context:
 {context}
-
----
 
 User's Question:
 {question}
 
----
-
 Now begin your answer by reasoning step-by-step.
 """
-
 
 def generate_response(question: str, context: List[str]) -> str:
     formatted_context = "\n".join([f"- {c}" for c in context])
