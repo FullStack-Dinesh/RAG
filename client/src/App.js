@@ -37,7 +37,7 @@ function App() {
 
   try {
     setLoading({ ...loading, upload: true });
-    const res = await axios.post('https://rag-zanardy-bycahud2h6aud9gp.southeastasia-01.azurewebsites.net/upload', formData, {
+    const res = await axios.post('http://localhost:8000/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
     setUploadMessage(res.data.message);
@@ -65,7 +65,7 @@ function App() {
         payload.session_id = sessionId;
       }
   
-      const res = await axios.post('https://rag-zanardy-bycahud2h6aud9gp.southeastasia-01.azurewebsites.net/query', payload, {
+      const res = await axios.post('http://localhost:8000/query', payload, {
         headers: { 'Content-Type': 'application/json' }
       });
   
@@ -89,7 +89,7 @@ function App() {
   const confirmReset = async () => {
     try {
       if (sessionId) {
-        await axios.post('https://rag-zanardy-bycahud2h6aud9gp.southeastasia-01.azurewebsites.net/reset', { session_id: sessionId }, {
+        await axios.post('http://localhost:8000/reset', { session_id: sessionId }, {
           headers: { 'Content-Type': 'application/json' }
         });
       }
